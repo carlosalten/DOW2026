@@ -1,0 +1,37 @@
+html{
+    font-size: 18px;
+}
+
+body{
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+h1{
+    color: darkblue;
+    /* font-size: 40px; */
+    font-size: 2.5rem;
+}
+
+#titulo-especial{
+    text-decoration: underline;
+    color: blue;
+}
+
+.parrafo-especial{
+    color: #660066;
+    font-weight: bold;
+}
+
+table,th,td{
+    border:1px solid #999999;
+    border-collapse: collapse;
+    padding: 0.6rem;
+}
+
+th{
+    background-color: #ADE1FB;
+}
+
+.texto-email{
+    font-style: italic;
+}
