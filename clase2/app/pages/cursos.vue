@@ -1,3 +1,22 @@
+<script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui';
+import type { Curso } from '~/types/curso';
+
+const { data: cursos, pending, error, refresh } = await useFetch<Curso[]>('/api/cursos')
+
+// console.log('Hola Mundo')
+// console.log(cursos.value)
+
+const columns: TableColumn<Curso>[] = [
+    { accessorKey: 'id', header: 'ID', meta: defaultColumnMeta },
+    { accessorKey: 'nombre', header: 'Nombre', meta: defaultColumnMeta },
+    { accessorKey: 'nivel', header: 'Nivel', meta: defaultColumnMeta },
+    { accessorKey: 'anio', header: 'Año', meta: defaultColumnMeta },
+]
+
+const tableMeta = createTableMeta<Curso>()
+</script>
+
 <template>
     <div class="mx-auto max-w-7xl space-y-4">
         <!-- Panel Título -->
@@ -31,6 +50,7 @@
             <!-- Error -->
 
             <!-- Tabla de cursos -->
+            <UTable :data="cursos" :columns="columns" :meta="tableMeta" />
 
             <!-- Mensaje si no hay cursos -->
         </div>
