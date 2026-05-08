@@ -1,3 +1,24 @@
+<script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui';
+import type { Estudiante } from '~/types/estudiante'
+
+const { data: estudiantes, pending, error, refresh } = await useFetch<Estudiante[]>('/api/estudiantes')
+
+// console.log(estudiantes.value)
+
+const columns: TableColumn<Estudiante>[] = [
+    { accessorKey: 'run', header: 'RUN', meta: defaultColumnMeta },
+    { accessorKey: 'apellidos', header: 'Apellidos', meta: defaultColumnMeta },
+    { accessorKey: 'nombres', header: 'Nombres', meta: defaultColumnMeta },
+    { accessorKey: 'email', header: 'Correo Electrónico', meta: defaultColumnMeta, cell: ({ row }) => row.original.email ?? '-' },
+    { accessorKey: 'fechaNac', header: 'Fecha de Nacimiento', meta: defaultColumnMeta, cell: ({ row }) => formatFecha(row.original.fechaNac) },
+    { accessorKey: 'curso.nombre', header: 'Curso', meta: defaultColumnMeta }
+]
+
+const tableMeta = createTableMeta<Estudiante>()
+
+</script>
+
 <template>
     <div class="mx-auto max-w-7xl space-y-4">
         <!-- Panel Título -->
@@ -25,6 +46,10 @@
                     <p class="text-sm text-course-text-muted">Se muestran los estudiantes del año 2026.</p>
                 </div>
             </div>
+
+            <!-- Tabla de estudiantes -->
+            <UTable :data="estudiantes" :columns="columns" :meta="tableMeta"
+                class="overflow-hidden rounded-lg border border-course-line bg-course-surface" />
         </div>
     </div>
 

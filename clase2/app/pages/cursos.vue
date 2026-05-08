@@ -50,11 +50,13 @@ const tableMeta = createTableMeta<Curso>()
             <!-- Error -->
 
             <!-- Tabla de cursos -->
-            <UTable v-if="cursos && cursos.length > 0" :data="cursos" :columns="columns" :meta="tableMeta" />
+            <UTable v-if="cursos && cursos.length > 0" :data="cursos" :columns="columns" :meta="tableMeta"
+                class="overflow-hidden rounded-lg border border-course-line bg-course-surface" />
 
             <!-- Mensaje si no hay cursos -->
             <EmptyState v-if="!pending && (!cursos || cursos.length == 0)"
-                mensaje="No hay cursos en la base de datos actualmente" />
+                mensaje="No hay cursos en la base de datos actualmente"
+                class="overflow-hidden rounded-lg border border-course-line bg-course-surface" />
         </div>
     </div>
 
