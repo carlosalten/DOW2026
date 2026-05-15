@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui';
+import type { Curso } from '~/types/curso';
 import type { Estudiante } from '~/types/estudiante'
 
 const { data: estudiantes, pending, error, refresh } = await useFetch<Estudiante[]>('/api/estudiantes')
+const { data: cursos, pending: pendingCursos } = await useFetch<Curso[]>('/api/cursos')
 
-// console.log(estudiantes.value)
+//formatea cursos para mostrarlos en USelectMenu
+const cursosOptions = computed(() => (
+    (cursos.value ?? []).map(curso => ({
+        id: curso.id,
+        label: curso.nombre,
+        description: `Nivel ${curso.nivel} - Año ${curso.anio}`
+    }))
+))
 
 const columns: TableColumn<Estudiante>[] = [
     { accessorKey: 'run', header: 'RUN', meta: defaultColumnMeta },
@@ -17,6 +26,59 @@ const columns: TableColumn<Estudiante>[] = [
 
 const tableMeta = createTableMeta<Estudiante>()
 
+const mostrarFormulario = ref(false)
+const guardandoEstudiante = ref(false)
+const errorFormulario = ref('')
+
+const formEstudiante = reactive({
+    run: '',
+    nombres: '',
+    apellidos: '',
+    email: '',
+    fechaNac: '',
+    cursoId: undefined as number | undefined
+})
+
+function limpiarFormulario() {
+    formEstudiante.run = ''
+    formEstudiante.nombres = ''
+    formEstudiante.apellidos = ''
+    formEstudiante.email = ''
+    formEstudiante.fechaNac = ''
+    formEstudiante.cursoId = undefined
+    errorFormulario.value = ''
+}
+
+function cerrarFormulario() {
+    mostrarFormulario.value = false
+    limpiarFormulario()
+}
+
+async function guardarEstudiante() {
+    errorFormulario.value = ''
+    guardandoEstudiante.value = true
+
+    try {
+        await $fetch('/api/estudiantes', {
+            method: 'POST',
+            body: {
+                run: formEstudiante.run,
+                nombres: formEstudiante.nombres,
+                apellidos: formEstudiante.apellidos,
+                email: formEstudiante.email || null,
+                fechaNac: formEstudiante.fechaNac || null,
+                cursoId: formEstudiante.cursoId
+            }
+        })
+        cerrarFormulario()
+        await refresh()
+    } catch (err: any) {
+        errorFormulario.value = getApiErrorMessage(err, 'No se pudo guardar el estudiante.')
+    }
+    finally {
+        guardandoEstudiante.value = false
+    }
+}
 </script>
 
 <template>
@@ -33,8 +95,11 @@ const tableMeta = createTableMeta<Estudiante>()
                         Consulta el listado actualizado de estudiantes en una vista clara y fácil de revisar.
                     </p>
                 </div>
+                <!-- Botón para abrir formulario -->
+                <UButton icon="i-heroicons-plus" variant="soft" @click="mostrarFormulario = true"
+                    class="selft-start rounded-full px-5 text-course-accent-strong shadow-sm">Agregar Estudiante
+                </UButton>
 
-                <!-- Botón Actualizar -->
             </div>
         </div>
 
@@ -53,4 +118,65 @@ const tableMeta = createTableMeta<Estudiante>()
         </div>
     </div>
 
+    <!-- Modal Agregar Estudiante -->
+    <BaseFormModal v-model:open="mostrarFormulario" title="Agregar Estudiante"
+        description="Completa los datos para registrar un nuevo estudiante.">
+        <form class="space-y-4" @submit.prevent="guardarEstudiante">
+            <!-- run -->
+            <UFormField label="RUN" name="run" :ui="modalFormFieldUi">
+                <UInput v-model="formEstudiante.run" color="neutral" variant="outline" :ui="modalInputUi" class="w-full"
+                    placeholder="Ej: 12345678-9" />
+            </UFormField>
+
+            <!-- nombres -->
+            <UFormField label="Nombres" name="nombres" :ui="modalFormFieldUi">
+                <UInput v-model="formEstudiante.nombres" color="neutral" variant="outline" :ui="modalInputUi"
+                    class="w-full" placeholder="Ej: Federico" />
+            </UFormField>
+
+            <!-- apellidos -->
+            <UFormField label="Apellidos" name="apellidos" :ui="modalFormFieldUi">
+                <UInput v-model="formEstudiante.apellidos" color="neutral" variant="outline" :ui="modalInputUi"
+                    class="w-full" placeholder="Ej: Santa María" />
+            </UFormField>
+
+            <!-- email -->
+            <UFormField label="Email" name="email" :ui="modalFormFieldUi">
+                <UInput v-model="formEstudiante.email" color="neutral" variant="outline" :ui="modalInputUi"
+                    class="w-full" placeholder="Ej: usuario@gmail.com" />
+            </UFormField>
+
+            <!-- fecha nacimiento -->
+            <UFormField label="Año" name="anio" :ui="modalFormFieldUi">
+                <UInput v-model="formEstudiante.fechaNac" color="neutral" variant="outline" type="date"
+                    :ui="modalInputUi" class="w-full" />
+            </UFormField>
+
+            <!-- cursos -->
+            <UFormField label="Curso" name="cursoId" :ui="modalFormFieldUi">
+                <USelectMenu v-model="formEstudiante.cursoId" :items="cursosOptions" value-key="id" label-key="label"
+                    description-key="description" placeholder="Selecciona un curso" color="neutral" variant="outline"
+                    :loading="pendingCursos" class="w-full" :ui="modalSelectUi"
+                    :search-input="{ placeholder: 'Buscar curso...', icon: 'i-lucide-search' }">
+                </USelectMenu>
+            </UFormField>
+
+            <!-- mensajes de error de formulario -->
+            <UAlert v-if="errorFormulario" color="error" variant="soft" icon="i-heroicons-exclamation-circle"
+                :title="errorFormulario" />
+
+            <!-- botones -->
+            <div class="flex justify-end gap-3 pt-2">
+                <!-- botón cancelar -->
+                <UButton type="button" color="neutral" variant="subtle" @click="cerrarFormulario">
+                    Cancelar
+                </UButton>
+
+                <!-- botón para guardar -->
+                <UButton type="submit" color="primary" icon="i-heroicons-check" :loading="guardandoEstudiante">
+                    Guardar Estudiante
+                </UButton>
+            </div>
+        </form>
+    </BaseFormModal>
 </template>
