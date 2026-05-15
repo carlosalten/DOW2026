@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui';
+import type { Curso } from '~/types/curso';
 import type { Estudiante } from '~/types/estudiante'
 
 const { data: estudiantes, pending, error, refresh } = await useFetch<Estudiante[]>('/api/estudiantes')
+const { data: cursos, pending: pendingCursos } = await useFetch<Curso[]>('/api/cursos')
 
-// console.log(estudiantes.value)
+// formatear cursos para colocar en formulario
+const cursosOptions = computed(() =>
+    (cursos.value ?? []).map(curso => ({
+        id: curso.id,
+        label: curso.nombre,
+        description: `Nivel ${curso.nivel} - Año ${curso.anio}`
+    }))
+)
 
 const columns: TableColumn<Estudiante>[] = [
     { accessorKey: 'run', header: 'RUN', meta: defaultColumnMeta },
@@ -45,7 +54,36 @@ function cerrarFormulario() {
     limpiarFormulario()
 }
 
-async function guardarEstudiante() { }
+async function guardarEstudiante() {
+    errorFormulario.value = ''
+    guardandoEstudiante.value = true
+
+    try {
+        // enviar nuevo estudiante al server
+        await $fetch('/api/estudiantes', {
+            method: 'POST',
+            body: {
+                run: formEstudiante.run,
+                nombres: formEstudiante.nombres,
+                apellidos: formEstudiante.apellidos,
+                email: formEstudiante.email || null,
+                fechaNac: formEstudiante.fechaNac || null,
+                cursoId: formEstudiante.cursoId
+            }
+        })
+
+        // cerrar el form
+        cerrarFormulario()
+
+        // refrescar la tabla que lista los cursos
+        await refresh()
+    } catch (err: any) {
+        errorFormulario.value = getApiErrorMessage(err, 'No se pudo guardar el estudiante.')
+    }
+    finally {
+        guardandoEstudiante.value = false
+    }
+}
 </script>
 
 <template>
@@ -119,6 +157,20 @@ async function guardarEstudiante() { }
             <UFormField label="Email" name="email" :ui="modalFormFieldUi">
                 <UInput v-model="formEstudiante.email" color="neutral" variant="outline" class="w-full"
                     :ui="modalInputUi" placeholder="usuario@gmail.com" />
+            </UFormField>
+
+            <!-- fecha de nacimiento -->
+            <UFormField label="Fecha de Nacimiento" name="fechaNac" :ui="modalFormFieldUi">
+                <UInput v-model="formEstudiante.fechaNac" color="neutral" variant="outline" class="w-full"
+                    :ui="modalInputUi" type="date" />
+            </UFormField>
+
+            <!-- curso -->
+            <UFormField label="Curso" name="cursoId" :ui="modalFormFieldUi">
+                <USelectMenu v-model="formEstudiante.cursoId" :items="cursosOptions" value-key="id" label-key="label"
+                    description-key="description" class="w-full" color="neutral" variant="outline" :ui="modalSelectUi"
+                    placeholder="Selecciona un curso" :loading="pendingCursos"
+                    :search-input="{ placeholder: 'Buscar Cursos', icon: 'i-lucide-search' }" />
             </UFormField>
 
             <!-- mensajes de error -->
