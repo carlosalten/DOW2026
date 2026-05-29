@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  --color-brand: #2563eb;
+  --color-brand-soft: #eff6ff;
+  --color-brand-deep: #1d4ed8;
+  --color-accent: #0891b2;
+  --color-accent-soft: #e0f2fe;
+  --color-surface: #f8fafc;
+  --color-muted: #64748b;
+  --color-success: #15803d;
+  --color-success-soft: #dcfce7;
+  --color-warning: #b45309;
+  --color-warning-soft: #fef3c7;
+}

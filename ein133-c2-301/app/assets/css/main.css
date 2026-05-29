@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  --color-brand: #1d4ed8;
+  --color-brand-light: #eff6ff;
+  --color-brand-dark: #1e40af;
+  --color-accent: #f59e0b;
+  --color-accent-dark: #d97706;
+  --color-surface: #f8fafc;
+  --color-divider: #e2e8f0;
+  --color-heading: #1e293b;
+  --color-muted: #64748b;
+}
