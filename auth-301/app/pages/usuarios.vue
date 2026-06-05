@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+    middleware: ['admin']
+})
+
 import type { Usuario } from '../types/usuario'
 
 const { data: usuarios, pending, error, refresh } = await useFetch<Usuario[]>('/api/usuarios')
@@ -30,7 +34,31 @@ function cerrarFormAgregar() {
     resetFormAgregar()
 }
 
-async function guardarUsuario() { }
+async function guardarUsuario() {
+    guardandoNuevoUsuario.value = true
+    errorFormAgregar.value = ''
+
+    try {
+        await $fetch('/api/usuarios', {
+            method: 'POST',
+            body: {
+                email: formNuevoUsuario.email,
+                password: formNuevoUsuario.password,
+                nombreCompleto: formNuevoUsuario.nombreCompleto,
+                activo: formNuevoUsuario.activo,
+                rol: formNuevoUsuario.rol,
+            }
+        })
+        cerrarFormAgregar()
+        await refresh()
+    }
+    catch (err: any) {
+        errorFormAgregar.value = getApiErrorMessage(err, 'No se pudo guardar el nuevo usuario')
+    }
+    finally {
+        guardandoNuevoUsuario.value = false
+    }
+}
 
 /* CAMBIAR CONTRASEÑA */
 const mostrarFormContrasena = ref(false)
@@ -210,7 +238,7 @@ function cerrarModalCambiarRol() {
     </BaseFormModal>
 
     <!-- Modal de confirmación para borrar usuario -->
-    <BaseFormModal v-model:open="mostrarConfirmBorrar" title="Borrar Usuario" :description="usuarioBorrar
+    <!--<BaseFormModal v-model:open="mostrarConfirmBorrar" title="Borrar Usuario" :description="usuarioBorrar
         ? `¿Estás seguro que deseas borrar a ${usuarioBorrar.nombreCompleto}? Esta acción no se puede deshacer.`
         : ''">
         <div class="flex justify-end gap-3 pt-2">
@@ -221,5 +249,5 @@ function cerrarModalCambiarRol() {
                 Borrar Usuario
             </UButton>
         </div>
-    </BaseFormModal>
+    </BaseFormModal>-->
 </template>
