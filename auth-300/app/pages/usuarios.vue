@@ -161,12 +161,12 @@ function cerrarModalCambiarRol() {
         ? `Actualiza la contraseña de ${usuarioContrasena.nombreCompleto}.`
         : 'Actualiza la contraseña del usuario seleccionado.'">
         <form class="space-y-4" @submit.prevent="cambiarContrasena">
-            <UFormField label="Nueva contraseña" name="nueva-contrasena">
+            <UFormField label="Nueva contraseña" name="nueva">
                 <UInput v-model="formContrasena.nueva" type="password" color="neutral" variant="outline" class="w-full"
                     placeholder="Ingresa la nueva contraseña" />
             </UFormField>
 
-            <UFormField label="Confirmar contraseña" name="confirmar-contrasena">
+            <UFormField label="Confirmar contraseña" name="confirmar">
                 <UInput v-model="formContrasena.confirmar" type="password" color="neutral" variant="outline"
                     class="w-full" placeholder="Repite la nueva contraseña" />
             </UFormField>
@@ -210,7 +210,7 @@ function cerrarModalCambiarRol() {
     </BaseFormModal>
 
     <!-- Modal de confirmación para borrar usuario -->
-    <BaseFormModal v-model:open="mostrarConfirmBorrar" title="Borrar Usuario" :description="usuarioBorrar
+    <!--<BaseFormModal v-model:open="mostrarConfirmBorrar" title="Borrar Usuario" :description="usuarioBorrar
         ? `¿Estás seguro que deseas borrar a ${usuarioBorrar.nombreCompleto}? Esta acción no se puede deshacer.`
         : ''">
         <div class="flex justify-end gap-3 pt-2">
@@ -221,5 +221,5 @@ function cerrarModalCambiarRol() {
                 Borrar Usuario
             </UButton>
         </div>
-    </BaseFormModal>
+    </BaseFormModal>-->
 </template>

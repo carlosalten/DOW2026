@@ -36,6 +36,18 @@
   --ui-border-accented: #cbd5e1;
 
   --ui-primary: var(--color-brand-blue);
+
+  --ui-color-error-50: #fff0f2;
+  --ui-color-error-100: #ffe0e4;
+  --ui-color-error-200: #ffc0cc;
+  --ui-color-error-300: #ff8899;
+  --ui-color-error-400: #f04060;
+  --ui-color-error-500: #d60019;
+  --ui-color-error-600: #b80015;
+  --ui-color-error-700: #950011;
+  --ui-color-error-800: #72000d;
+  --ui-color-error-900: #4d0009;
+  --ui-color-error-950: #2a0005;
 }
 
 @utility bg-brand-gradient {
