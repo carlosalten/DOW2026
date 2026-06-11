@@ -4,6 +4,11 @@ import type { Usuario } from '~/types/usuario'
 const props = defineProps<{
     usuario: Usuario
 }>()
+
+const emit = defineEmits<{
+    'activar-usuario': [usuario: Usuario],
+    'borrar-usuario': [usuario: Usuario]
+}>()
 </script>
 
 <template>
@@ -42,7 +47,8 @@ const props = defineProps<{
 
             <UTooltip text="Eliminar usuario">
                 <UButton icon="i-lucide-trash-2" aria-label="Eliminar usuario" variant="soft" size="xs"
-                    class="rounded-full bg-brand-red/12 text-brand-red hover:bg-brand-red/24" />
+                    class="rounded-full bg-brand-red/12 text-brand-red hover:bg-brand-red/24"
+                    @click="emit('borrar-usuario', props.usuario)" />
             </UTooltip>
 
             <UTooltip :text="props.usuario.activo ? 'Bloquear usuario' : 'Activar usuario'">
@@ -50,7 +56,8 @@ const props = defineProps<{
                     :aria-label="props.usuario.activo ? 'Bloquear usuario' : 'Activar usuario'" variant="soft" size="xs"
                     :class="props.usuario.activo
                         ? 'rounded-full bg-brand-red/12 text-brand-red hover:bg-brand-red/24'
-                        : 'rounded-full bg-brand-green/12 text-brand-green hover:bg-brand-green/24'" />
+                        : 'rounded-full bg-brand-green/12 text-brand-green hover:bg-brand-green/24'"
+                    @click="emit('activar-usuario', props.usuario)" />
             </UTooltip>
         </div>
     </UCard>

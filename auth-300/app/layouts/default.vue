@@ -7,7 +7,7 @@ const isActive = (to: String) => route.path === to
 const navLinks = [
     { label: 'Inicio', to: '/' },
     { label: 'Productos', to: '/productos' },
-    { label: 'Usuarios', to: '/usuarios' },
+    ...(user.value?.rol === 'Administrador' ? [{ label: 'Usuarios', to: '/usuarios' }] : [])
 ]
 
 async function logout() {

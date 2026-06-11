@@ -114,6 +114,66 @@ function cerrarModalCambiarRol() {
     mostrarFormCambiarRol.value = false
     resetFormCambiarRol()
 }
+
+/* ***** ACTIVAR/DESACTIVAR USUARIO ***** */
+const guardandoActivarUsuario = ref(false)
+async function activarUsuario(usuario: Usuario) {
+    guardandoActivarUsuario.value = true
+    try {
+        await $fetch(`/api/usuarios/${usuario.email}/activar`, {
+            method: 'PATCH',
+        })
+        await refresh()
+        useToast().add({
+            duration: 2000,
+            icon: 'i-lucide-lock',
+            title: 'Estado del Usuario',
+            description: `Se cambió el estado de ${usuario.nombreCompleto}`
+        })
+    } catch (err: any) {
+
+    } finally {
+        guardandoActivarUsuario.value = false
+    }
+}
+
+/* ***** BORRAR USUARIO ***** */
+const mostrarConfirmBorrar = ref(false)
+const borrandoUsuario = ref(false)
+const usuarioBorrar = ref<Usuario | null>(null)
+
+async function borrarUsuario() {
+    borrandoUsuario.value = true
+    try {
+        await $fetch(`/api/usuarios/${usuarioBorrar.value?.email}`, {
+            method: 'DELETE'
+        })
+        const nombreCompleto = usuarioBorrar.value?.nombreCompleto
+        cerrarConfirmBorrar()
+        await refresh()
+        useToast().add({
+            duration: 2000,
+            icon: 'i-lucide-trash-2',
+            title: 'Borrado de Usuario',
+            description: `Se borró al usuario ${nombreCompleto}`
+        })
+    }
+    catch (err: any) { }
+    finally {
+        borrandoUsuario.value = false
+    }
+}
+
+function confirmarBorrarUsuario(usuario: Usuario) {
+    usuarioBorrar.value = usuario
+    mostrarConfirmBorrar.value = true
+}
+
+function cerrarConfirmBorrar() {
+    mostrarConfirmBorrar.value = false
+    usuarioBorrar.value = null
+}
+
 </script>
 
 <template>
@@ -136,7 +196,8 @@ function cerrarModalCambiarRol() {
 
         <section class="grid gap-4 md:grid-cols-2">
             <UsuarioCard v-for="usuario in usuarios" :key="usuario.email" :usuario="usuario"
-                @cambiar-contrasena="abrirModalContrasena" @cambiar-rol="abrirModalCambiarRol" />
+                @cambiar-contrasena="abrirModalContrasena" @cambiar-rol="abrirModalCambiarRol"
+                @activar-usuario="activarUsuario" @borrar-usuario="confirmarBorrarUsuario" />
         </section>
     </div>
 
@@ -238,16 +299,17 @@ function cerrarModalCambiarRol() {
     </BaseFormModal>
 
     <!-- Modal de confirmación para borrar usuario -->
-    <!--<BaseFormModal v-model:open="mostrarConfirmBorrar" title="Borrar Usuario" :description="usuarioBorrar
+    <BaseFormModal v-model:open="mostrarConfirmBorrar" title="Borrar Usuario" :description="usuarioBorrar
         ? `¿Estás seguro que deseas borrar a ${usuarioBorrar.nombreCompleto}? Esta acción no se puede deshacer.`
         : ''">
         <div class="flex justify-end gap-3 pt-2">
             <UButton type="button" color="neutral" variant="subtle" @click="cerrarConfirmBorrar">
                 Cancelar
             </UButton>
-            <UButton type="button" icon="i-lucide-trash-2" :loading="borrandoUsuario" :ui="formBtnError">
+            <UButton type="button" icon="i-lucide-trash-2" :loading="borrandoUsuario" :ui="formBtnError"
+                @click="borrarUsuario">
                 Borrar Usuario
             </UButton>
         </div>
-    </BaseFormModal>-->
+    </BaseFormModal>
 </template>

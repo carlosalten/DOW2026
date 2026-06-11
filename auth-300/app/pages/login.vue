@@ -1,6 +1,13 @@
 <script setup lang="ts">
+import { z } from 'zod'
+
 definePageMeta({
     layout: 'auth'
+})
+
+const schemaLogin = z.object({
+    email: z.email({ message: 'Ingresa un correo válido' }),
+    password: z.string().min(6, 'La contraseña debe tener 6 caracteres como mínimo')
 })
 
 const iniciandoSesion = ref(false)
@@ -54,7 +61,7 @@ async function login() {
             </template>
 
             <div>
-                <form class="space-y-5" @submit.prevent="login">
+                <UForm class="space-y-5" :state="formLogin" :schema="schemaLogin" @submit="login">
                     <UFormField label="Correo corporativo" name="email">
                         <UInput v-model="formLogin.email" placeholder="correo@empresa.com" size="xl" class="w-full" />
                     </UFormField>
@@ -72,7 +79,7 @@ async function login() {
                         class="bg-brand-blue text-white hover:bg-brand-blue/90">
                         Ingresar al Sistema
                     </UButton>
-                </form>
+                </UForm>
             </div>
         </UCard>
     </div>

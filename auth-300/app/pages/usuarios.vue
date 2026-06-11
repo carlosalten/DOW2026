@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import { z } from 'zod'
+definePageMeta({
+    middleware: ['admin']
+})
+
 import type { Usuario } from '../types/usuario'
 
 const { data: usuarios, pending, error, refresh } = await useFetch<Usuario[]>('/api/usuarios')
@@ -8,6 +13,12 @@ const roles = ['Administrador', 'Funcionario']
 const mostrarFormAgregar = ref(false)
 const errorFormAgregar = ref('')
 const guardandoNuevoUsuario = ref(false)
+
+const schemaNuevoUsuario = z.object({
+    email: z.email({ message: 'Ingresa un correo válido' }),
+    password: z.string().min(6, 'La contraseña debe tener 6 caracteres como mínimo'),
+    nombreCompleto: z.string().min(5, 'El nombre debe tener al menos 5 letras.').max(100, 'El nombre debe tener al menos 100 letras.')
+})
 
 const formNuevoUsuario = reactive({
     nombreCompleto: '',
@@ -30,7 +41,24 @@ function cerrarFormAgregar() {
     resetFormAgregar()
 }
 
-async function guardarUsuario() { }
+async function guardarUsuario() {
+    guardandoNuevoUsuario.value = true
+    errorFormAgregar.value = ''
+    try {
+        await $fetch('/api/usuarios', {
+            method: 'POST',
+            body: formNuevoUsuario
+        })
+        cerrarFormAgregar()
+        await refresh()
+    }
+    catch (err: any) {
+        errorFormAgregar.value = getApiErrorMessage(err, 'No se pudo guardar el usuario.')
+    }
+    finally {
+        guardandoNuevoUsuario.value = false
+    }
+}
 
 /* CAMBIAR CONTRASEÑA */
 const mostrarFormContrasena = ref(false)
@@ -60,7 +88,26 @@ function cerrarModalContrasena() {
     resetFormContrasena()
 }
 
-async function cambiarContrasena() { }
+async function cambiarContrasena() {
+    guardandoContrasena.value = true
+    errorContrasena.value = ''
+
+    try {
+        await $fetch(`/api/usuarios/${usuarioContrasena.value?.email}/password`, {
+            method: 'PATCH',
+            body: {
+                password: formContrasena.nueva
+            }
+        })
+        cerrarModalContrasena()
+    }
+    catch (err: any) {
+        errorContrasena.value = getApiErrorMessage(err, 'No se pudo cambiar la constraseña.')
+    }
+    finally {
+        guardandoContrasena.value = false
+    }
+}
 
 /* CAMBIAR ROL */
 const mostrarFormCambiarRol = ref(false)
@@ -83,9 +130,79 @@ function abrirModalCambiarRol(usuario: Usuario) {
 }
 
 function cerrarModalCambiarRol() {
+    usuarioCambiarRol.value = null
     mostrarFormCambiarRol.value = false
     resetFormCambiarRol()
 }
+
+async function cambiarRol() {
+    guardandoCambioRol.value = true
+    try {
+        await $fetch(`/api/usuarios/${usuarioCambiarRol.value?.email}/rol`, {
+            method: 'PATCH',
+            body: {
+                rol: formCambiarRol.rol
+            }
+        })
+        cerrarModalCambiarRol()
+        await refresh()
+    }
+    catch (err: any) { }
+    finally {
+        guardandoCambioRol.value = false
+    }
+}
+
+/* ***** BORRAR USUARIO ***** */
+const mostrarConfirmBorrar = ref(false)
+const borrandoUsuario = ref(false)
+const usuarioBorrar = ref<Usuario | null>(null)
+
+function confirmarBorrarUsuario(usuario: Usuario) {
+    usuarioBorrar.value = usuario
+    mostrarConfirmBorrar.value = true
+}
+
+function cerrarConfirmBorrar() {
+    usuarioBorrar.value = null
+    mostrarConfirmBorrar.value = false
+}
+
+async function borrarUsuario() {
+    borrandoUsuario.value = true
+    try {
+        await $fetch(`/api/usuarios/${usuarioBorrar.value?.email}`, { method: 'DELETE' })
+        const nombreCompleto = usuarioBorrar.value?.nombreCompleto
+        cerrarConfirmBorrar()
+        await refresh()
+        useToast().add({
+            duration: 2000,
+            icon: 'i-lucide-trash-2',
+            title: 'Borrado de Usuario',
+            description: `Se borró el usuario ${nombreCompleto}`
+        })
+    }
+    catch (err: any) { }
+    finally {
+        borrandoUsuario.value = false
+    }
+}
+
+/* ***** ACTIVAR/DESACTIVAR USUARIO ***** */
+async function activarUsuario(usuario: Usuario) {
+    try {
+        await $fetch(`/api/usuarios/${usuario.email}/activar`, {
+            method: 'PATCH'
+        })
+        await refresh()
+        useToast().add({
+            duration: 2000,
+            icon: 'i-lucide-lock',
+            title: 'Cambiar Estado de Usuario',
+            description: `Se cambió el estado ${usuario.nombreCompleto}`
+        })
+    } catch (err: any) { }
+}   
 </script>
 
 <template>
@@ -108,14 +225,15 @@ function cerrarModalCambiarRol() {
 
         <section class="grid gap-4 md:grid-cols-2">
             <UsuarioCard v-for="usuario in usuarios" :key="usuario.email" :usuario="usuario"
-                @cambiar-contrasena="abrirModalContrasena" @cambiar-rol="abrirModalCambiarRol" />
+                @cambiar-contrasena="abrirModalContrasena" @cambiar-rol="abrirModalCambiarRol"
+                @borrar-usuario="confirmarBorrarUsuario" @activar-usuario="activarUsuario" />
         </section>
     </div>
 
     <!-- Modal para nuevo usuario -->
     <BaseFormModal v-model:open="mostrarFormAgregar" title="Agregar Usuario"
         description="Completa los datos para registrar un nuevo usuario.">
-        <form class="space-y-4" @submit.prevent="guardarUsuario">
+        <UForm class="space-y-4" :state="formNuevoUsuario" :schema="schemaNuevoUsuario" @submit="guardarUsuario">
             <UFormField label="Nombre y Apellido" name="nombreCompleto">
                 <UInput v-model="formNuevoUsuario.nombreCompleto" color="neutral" variant="outline" class="w-full"
                     placeholder="Ej: Federico Santa Maria" />
@@ -153,7 +271,7 @@ function cerrarModalCambiarRol() {
                     Agregar Usuario
                 </UButton>
             </div>
-        </form>
+        </UForm>
     </BaseFormModal>
 
     <!-- Modal para cambiar contraseña -->
@@ -191,7 +309,7 @@ function cerrarModalCambiarRol() {
     <BaseFormModal v-model:open="mostrarFormCambiarRol" title="Cambiar Rol" :description="usuarioCambiarRol
         ? `Cambia el rol de ${usuarioCambiarRol.nombreCompleto}.`
         : 'Cambia el rol del usuario seleccionado.'">
-        <form>
+        <form @submit.prevent="cambiarRol">
             <UFormField label="Rol" name="rol">
                 <URadioGroup v-model="formCambiarRol.rol" :items="roles" :ui="formRadioGroupUi" />
             </UFormField>
@@ -210,16 +328,17 @@ function cerrarModalCambiarRol() {
     </BaseFormModal>
 
     <!-- Modal de confirmación para borrar usuario -->
-    <!--<BaseFormModal v-model:open="mostrarConfirmBorrar" title="Borrar Usuario" :description="usuarioBorrar
+    <BaseFormModal v-model:open="mostrarConfirmBorrar" title="Borrar Usuario" :description="usuarioBorrar
         ? `¿Estás seguro que deseas borrar a ${usuarioBorrar.nombreCompleto}? Esta acción no se puede deshacer.`
         : ''">
         <div class="flex justify-end gap-3 pt-2">
             <UButton type="button" color="neutral" variant="subtle" @click="cerrarConfirmBorrar">
                 Cancelar
             </UButton>
-            <UButton type="button" icon="i-lucide-trash-2" :loading="borrandoUsuario" :ui="formBtnError">
+            <UButton type="button" icon="i-lucide-trash-2" :loading="borrandoUsuario" :ui="formBtnError"
+                @click="borrarUsuario">
                 Borrar Usuario
             </UButton>
         </div>
-    </BaseFormModal>-->
+    </BaseFormModal>
 </template>
